@@ -1,0 +1,1 @@
+// fingerprinting por IP/device
