@@ -1,36 +1,29 @@
-import { useEffect } from 'react'
-import { supabase } from './supabaseClient'
+import { useEffect, useState } from "react";
+import { supabase } from "./supabaseClient";
+import LoginRegisto from "./LoginRegisto";
+import PlataformaSaudeBioFormacoes from "./PlataformaSaudeBioFormacoes";
 
-function App() {
+export default function App() {
+  const [logado, setLogado] = useState(false);
+
   useEffect(() => {
     async function registar() {
-      const { data, error } = await supabase.from('users').insert([
+      const { data, error } = await supabase.from("users").insert([
         {
-          email: 'teste@exemplo.com',
-          ip: '123.123.123.123',
-          consultas_restantes: 3
-        }
-      ])
+          email: "teste@exemplo.com",
+          ip: "123.123.123.123",
+          consultas_restantes: 3,
+        },
+      ]);
       if (error) {
-        console.error('❌ Erro ao inserir:', error.message)
+        console.error("❌ Erro ao inserir:", error.message);
       } else {
-        console.log('✅ Inserido com sucesso:', data)
+        console.log("✅ Inserido com sucesso:", data);
       }
     }
 
-    registar()
-  }, [])
-
-  return <h1>Teste de Supabase</h1>
-}
-
-export default App
-import LoginRegisto from "./LoginRegisto";
-import PlataformaSaudeBioFormacoes from "./PlataformaSaudeBioFormacoes";
-import { useState } from "react";
-
-export default function App() {
-  const [logado, setLogado] = useState(!!localStorage.getItem("utilizador"));
+    registar();
+  }, []);
 
   return logado ? (
     <PlataformaSaudeBioFormacoes />
@@ -38,11 +31,3 @@ export default function App() {
     <LoginRegisto onLogin={() => setLogado(true)} />
   );
 }
-<Route
-  path="/admin"
-  element={
-    <ProtectedRoute onlyAdmin>
-      <Dashboard />
-    </ProtectedRoute>
-  }
-/>
