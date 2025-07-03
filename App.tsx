@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabaseClient";
 import LoginRegisto from "./LoginRegisto";
-import PlataformaSaudeBioFormacoes from "./PlataformaSaudeBioFormacoes";
+import PlataformaSaudeBioFormacoes from "./src/components/PlataformaSaudeBioFormacoes";
 
 export default function App() {
   const [logado, setLogado] = useState(false);
