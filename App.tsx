@@ -1,8 +1,14 @@
-export default function PlataformaSaudeBioFormacoes() {
-  return (
-    <div>
-      <h1>Bem-vindo à Plataforma Saúde BioFormações</h1>
-      <p>Conteúdo ainda em construção...</p>
-    </div>
+import { useEffect, useState } from "react";
+import supabase from "./supabaseClient";
+import LoginRegisto from "./LoginRegisto";
+import PlataformaSaudeBioFormacoes from "./PlataformaSaudeBioFormacoes";
+
+export default function App() {
+  const [logado, setLogado] = useState(!!localStorage.getItem("utilizador"));
+
+  return logado ? (
+    <PlataformaSaudeBioFormacoes />
+  ) : (
+    <LoginRegisto onLogin={() => setLogado(true)} />
   );
 }
