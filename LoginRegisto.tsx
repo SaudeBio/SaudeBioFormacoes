@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { supabase } from "./supabaseClient";
-import bcrypt from "bcryptjs";
 
 export default function LoginRegisto({ onLogin }: { onLogin: () => void }) {
   const [modo, setModo] = useState<"login" | "registo">("login");
@@ -12,49 +11,66 @@ export default function LoginRegisto({ onLogin }: { onLogin: () => void }) {
     e.preventDefault();
     setErro("");
 
-    const password_hash = await bcrypt.hash(password, 10);
-
     if (modo === "registo") {
+      // REGISTO via Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        setErro("Erro no registo: " + error.message);
+        return;
+      }
+
+      // Criar entrada adicional na tabela personalizada (opcional)
       const validade = new Date();
       validade.setDate(validade.getDate() + 90); // 90 dias
 
-      const { error } = await supabase.from("users_apps").insert([
+      const { error: dbError } = await supabase.from("users_apps").insert([
         {
           email,
-          password_hash,
           plano: "gratuito",
           data_registo: new Date(),
           validade_acesso: validade,
         },
       ]);
 
-      if (error) {
-        setErro("Erro no registo: " + error.message);
+      if (dbError) {
+        setErro("Erro ao criar conta: " + dbError.message);
         return;
       }
+
+      alert("Conta criada com sucesso! Faz login agora.");
+      setModo("login");
+      return;
     }
 
-    // LOGIN
-    const { data, error } = await supabase
+    // LOGIN via Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error || !data.user) {
+      setErro("Login falhou: " + (error?.message || "Utilizador não encontrado."));
+      return;
+    }
+
+    // Verificar validade do plano na tabela "users_apps"
+    const { data: userData, error: userError } = await supabase
       .from("users_apps")
       .select("*")
       .eq("email", email)
       .single();
 
-    if (error || !data) {
-      setErro("Utilizador não encontrado.");
-      return;
-    }
-
-    const passwordOk = await bcrypt.compare(password, data.password_hash);
-
-    if (!passwordOk) {
-      setErro("Password incorreta.");
+    if (userError || !userData) {
+      setErro("Erro ao verificar plano do utilizador.");
       return;
     }
 
     const hoje = new Date();
-    const validade = new Date(data.validade_acesso);
+    const validade = new Date(userData.validade_acesso);
 
     if (validade < hoje) {
       setErro("Acesso expirado. Renova o plano para continuar.");
@@ -62,7 +78,7 @@ export default function LoginRegisto({ onLogin }: { onLogin: () => void }) {
     }
 
     // Sessão OK
-    localStorage.setItem("utilizador", JSON.stringify(data));
+    localStorage.setItem("utilizador", JSON.stringify(userData));
     onLogin();
   }
 
