@@ -12,73 +12,51 @@ export default function LoginRegisto({ onLogin }: { onLogin: () => void }) {
     setErro("");
 
     if (modo === "registo") {
-      // REGISTO via Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) {
-        setErro("Erro no registo: " + error.message);
-        return;
-      }
-
-      // Criar entrada adicional na tabela personalizada (opcional)
       const validade = new Date();
       validade.setDate(validade.getDate() + 90); // 90 dias
 
-      const { error: dbError } = await supabase.from("users_apps").insert([
+      const { error } = await supabase.from("users_apps").insert([
         {
           email,
+          password_hash: password, // ⚠️ Apenas para testes. Idealmente deve ir encriptada no backend.
           plano: "gratuito",
           data_registo: new Date(),
           validade_acesso: validade,
         },
       ]);
 
-      if (dbError) {
-        setErro("Erro ao criar conta: " + dbError.message);
+      if (error) {
+        setErro("Erro no registo: " + error.message);
         return;
       }
-
-      alert("Conta criada com sucesso! Faz login agora.");
-      setModo("login");
-      return;
     }
 
-    // LOGIN via Supabase Auth
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error || !data.user) {
-      setErro("Login falhou: " + (error?.message || "Utilizador não encontrado."));
-      return;
-    }
-
-    // Verificar validade do plano na tabela "users_apps"
-    const { data: userData, error: userError } = await supabase
+    // LOGIN
+    const { data, error } = await supabase
       .from("users_apps")
       .select("*")
       .eq("email", email)
       .single();
 
-    if (userError || !userData) {
-      setErro("Erro ao verificar plano do utilizador.");
+    if (error || !data) {
+      setErro("Utilizador não encontrado.");
+      return;
+    }
+
+    if (data.password_hash !== password) {
+      setErro("Password incorreta.");
       return;
     }
 
     const hoje = new Date();
-    const validade = new Date(userData.validade_acesso);
+    const validade = new Date(data.validade_acesso);
 
     if (validade < hoje) {
       setErro("Acesso expirado. Renova o plano para continuar.");
       return;
     }
 
-    // Sessão OK
-    localStorage.setItem("utilizador", JSON.stringify(userData));
+    localStorage.setItem("utilizador", JSON.stringify(data));
     onLogin();
   }
 
