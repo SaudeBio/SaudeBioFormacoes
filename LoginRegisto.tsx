@@ -18,7 +18,7 @@ export default function LoginRegisto({ onLogin }: { onLogin: () => void }) {
       const { error } = await supabase.from("users_apps").insert([
         {
           email,
-          password_hash: password,
+          password_hash: password, // AVISO: sem encriptação (temporário)
           plano: "gratuito",
           data_registo: new Date(),
           validade_acesso: validade,
@@ -31,6 +31,7 @@ export default function LoginRegisto({ onLogin }: { onLogin: () => void }) {
       }
     }
 
+    // LOGIN
     const { data, error } = await supabase
       .from("users_apps")
       .select("*")
@@ -60,48 +61,46 @@ export default function LoginRegisto({ onLogin }: { onLogin: () => void }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6">
-          {modo === "login" ? "Login" : "Criar Conta"}
-        </h2>
+    <div className="p-6 max-w-md mx-auto bg-white rounded-xl shadow-md space-y-4 mt-10 border">
+      <h2 className="text-2xl font-bold text-center">
+        {modo === "login" ? "Login" : "Criar Conta"}
+      </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-          >
-            {modo === "login" ? "Entrar" : "Registar"}
-          </button>
-        </form>
-
-        {erro && <p className="text-red-500 mt-4 text-center">{erro}</p>}
-
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-full p-2 border rounded"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-full p-2 border rounded"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
         <button
-          className="mt-6 text-sm text-blue-500 hover:underline w-full text-center"
-          onClick={() => setModo(modo === "login" ? "registo" : "login")}
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
         >
-          {modo === "login"
-            ? "Não tens conta? Regista-te aqui"
-            : "Já tens conta? Faz login"}
+          {modo === "login" ? "Entrar" : "Registar"}
         </button>
-      </div>
+      </form>
+
+      {erro && <p className="text-red-600 text-center">{erro}</p>}
+
+      <button
+        className="text-sm text-blue-600 underline block mx-auto"
+        onClick={() => setModo(modo === "login" ? "registo" : "login")}
+      >
+        {modo === "login"
+          ? "Não tens conta? Regista-te aqui"
+          : "Já tens conta? Entra aqui"}
+      </button>
     </div>
   );
 }
